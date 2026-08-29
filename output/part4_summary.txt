@@ -1,0 +1,21 @@
+Baseline (time=0) melanoma PBMC samples, miraclib-treated
+============================================================
+Total samples: 656
+Total unique subjects: 656
+
+Samples per project:
+  prj1: 384
+  prj3: 272
+
+Subjects by response:
+  yes: 331
+  no: 325
+
+Subjects by sex:
+  M: 344
+  F: 312
+
+Average B cell count, melanoma males, responders, time=0, all sample types & treatments
+------------------------------------------------------------
+  n samples: 485
+  average B cell count: 10206.15
