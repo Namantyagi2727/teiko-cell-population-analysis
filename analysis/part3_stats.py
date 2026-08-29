@@ -16,6 +16,7 @@ import matplotlib
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 import seaborn as sns
 from scipy import stats
@@ -96,6 +97,7 @@ def compare_populations(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def plot_boxplots(df: pd.DataFrame) -> None:
+    np.random.seed(0)  # stripplot jitter is random; fix seed for reproducible output
     fig, axes = plt.subplots(1, len(POPULATIONS), figsize=(4 * len(POPULATIONS), 4.5), sharey=False)
     for ax, population in zip(axes, POPULATIONS):
         sub = df[df["population"] == population]
