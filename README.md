@@ -1,9 +1,34 @@
 # Immune Cell Population Analysis
 
+[![CI](https://github.com/Namantyagi2727/teiko-cell-population-analysis/actions/workflows/ci.yml/badge.svg)](https://github.com/Namantyagi2727/teiko-cell-population-analysis/actions/workflows/ci.yml)
+![Python 3.12](https://img.shields.io/badge/python-3.12-blue)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 Analysis pipeline and interactive dashboard for Bob Loblaw's miraclib clinical
 trial data, built on the cell population counts in `cell-count.csv`.
 
 **Live dashboard:** https://teiko-cell-population-analysis-dashboard.streamlit.app/
+
+## Key findings (TL;DR)
+
+- **Part 2:** every sample's five immune cell populations (`b_cell`,
+  `cd8_t_cell`, `cd4_t_cell`, `nk_cell`, `monocyte`) were converted to
+  percentages of that sample's total cell count — see
+  [`output/part2_frequencies.csv`](output/part2_frequencies.csv) or the
+  dashboard's "Part 2" tab.
+- **Part 3:** comparing miraclib-treated melanoma PBMC samples, **no cell
+  population's relative frequency reliably distinguishes responders from
+  non-responders.** `cd4_t_cell` has the lowest raw p-value (0.013), but it
+  doesn't survive multiple-testing correction (FDR-adjusted p = 0.067), and
+  its effect size is small either way (rank-biserial r = 0.06 out of a
+  possible ±1). None of the 5 populations is a usable predictor of response
+  on its own in this dataset.
+- **Part 4:** among baseline (time = 0) melanoma PBMC samples treated with
+  miraclib (656 samples, 656 subjects): 384 from `prj1` and 272 from `prj3`
+  (`prj2` has no PBMC samples at all); 331 responders vs. 325
+  non-responders; 344 male vs. 312 female subjects. Average B cell count for
+  melanoma male responders at time = 0, across *all* sample types and
+  treatments, is **10206.15** (n = 485 samples).
 
 ## Running it
 
@@ -33,9 +58,28 @@ repo so results can be inspected without running anything, but they're fully
 reproducible by re-running `make pipeline` (the pipeline is deterministic —
 re-running it produces byte-identical output).
 
-`make dashboard` needs `cell_counts.db` to already exist, so run `make
-pipeline` at least once first. In Codespaces, accept the port-forwarding
-prompt for port 8501 to open it in the browser.
+`make dashboard` does *not* require `cell_counts.db` to exist first — the
+dashboard builds it automatically on first load if it's missing. In
+Codespaces, accept the port-forwarding prompt for port 8501 to open it in
+the browser.
+
+Two extra targets beyond the three required by the assignment spec:
+
+```bash
+make test   # runs the pytest suite (tests/)
+make clean  # removes cell_counts.db, output/, and cached bytecode
+```
+
+## Testing
+
+`make test` runs 15 tests covering data integrity (row counts match the
+CSV, every foreign key resolves, sample IDs are unique), Part 2 (per-sample
+percentages sum to 100), Part 3 (the hand-rolled Benjamini-Hochberg
+correction matches hand-calculated expected values; all stats fall in valid
+ranges), and Part 4 (the baseline breakdown counts are internally
+consistent, and the headline B-cell average is locked in as a regression
+guard). CI (`.github/workflows/ci.yml`) runs `make setup && make pipeline
+&& make test` on every push and pull request against `main`.
 
 ## Database schema
 
@@ -121,8 +165,11 @@ analysis/
   part4_subset.py                     # Part 4: baseline subset breakdown + B-cell average
 dashboard/
   app.py                              # Streamlit dashboard, covers Parts 2-4
+tests/                                 # pytest suite (see "Testing" below)
 output/                                # generated tables + plots (see below)
 cell_counts.db                        # generated SQLite database
+.devcontainer/devcontainer.json       # pins Codespaces to Python 3.12
+.github/workflows/ci.yml              # runs setup -> pipeline -> test on push/PR
 requirements.txt
 Makefile
 ```
@@ -175,3 +222,33 @@ miraclib samples).
 | `output/part3_boxplots.png` | Part 3 — boxplots, responders vs non-responders, per population |
 | `output/part4_summary.txt` | Part 4 — baseline subset breakdown + B-cell average |
 | `output/part4_baseline_samples.csv` | Part 4 — raw matching sample rows for the baseline subset |
+
+## Assumptions & limitations
+
+- **Column names follow the actual CSV, not the assignment prose.** The
+  task description refers to `indication` and `gender`; the real columns in
+  `cell-count.csv` are `condition` and `sex`. The schema and all queries use
+  the real names.
+- **"Average number of B cells" (Part 4) is a raw count, not a percentage**,
+  averaged across the 485 matching *samples*. This happens to equal the
+  average across *subjects* too — verified that all 485 matching samples
+  come from 485 distinct subjects, i.e. no subject contributes more than
+  one sample to that particular subset.
+- **Part 3's significance test excludes samples with a blank `response`**
+  (present for `treatment = none`/healthy subjects, who were never given a
+  response outcome to begin with) — only `yes`/`no` are compared.
+  Mann-Whitney U was chosen over a plain t-test as the primary test because
+  cell-population percentages aren't guaranteed normally distributed and
+  the test is robust to outliers; Welch's t-test is reported alongside for
+  reference, and both roughly agree here.
+- **Subject-level fields were verified constant per subject** (`project`,
+  `condition`, `age`, `sex` never vary across a subject's samples;
+  `treatment`/`response` likewise never vary across a subject's samples in
+  this dataset) before normalizing them onto `subjects`/`samples` rather
+  than leaving everything on one wide table. If a future dataset has, say,
+  a subject switching treatments mid-trial, `treatment`/`response` already
+  live on `samples` (not `subjects`) specifically so that case doesn't
+  require a schema change.
+- **The pipeline is deterministic.** The one source of nondeterminism
+  (`stripplot` jitter in the Part 3 boxplot) is seeded, so `make pipeline`
+  produces byte-identical output across runs — verified during development.
