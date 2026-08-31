@@ -3,7 +3,7 @@
 Analysis pipeline and interactive dashboard for Bob Loblaw's miraclib clinical
 trial data, built on the cell population counts in `cell-count.csv`.
 
-**Live dashboard:** _TODO_ (deployed via Streamlit Community Cloud)
+**Live dashboard:** https://teiko-cell-population-analysis-dashboard.streamlit.app/
 
 ## Running it
 
