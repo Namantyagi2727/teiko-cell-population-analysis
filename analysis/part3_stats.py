@@ -28,6 +28,14 @@ PLOT_PATH = ROOT / "output" / "part3_boxplots.png"
 
 POPULATIONS = ["b_cell", "cd8_t_cell", "cd4_t_cell", "nk_cell", "monocyte"]
 
+# Categorical palette shared by every chart in this project (this static plot
+# and the dashboard), so a given category always maps to the same color.
+# Validated for colorblind-safe adjacent-pair separation (CVD deltaE) and
+# contrast against a white chart surface -- see references/palette.md in the
+# dataviz design skill for the full validation. Fixed order, never cycled.
+CATEGORICAL_PALETTE = ["#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4"]
+RESPONSE_COLORS = {"no": CATEGORICAL_PALETTE[0], "yes": CATEGORICAL_PALETTE[1]}
+
 QUERY = """
 SELECT
     s.sample_id AS sample,
@@ -118,7 +126,7 @@ def plot_boxplots(df: pd.DataFrame) -> None:
             order=["no", "yes"],
             hue="response",
             hue_order=["no", "yes"],
-            palette={"no": "#d95f02", "yes": "#1b9e77"},
+            palette=RESPONSE_COLORS,
             legend=False,
             ax=ax,
         )
