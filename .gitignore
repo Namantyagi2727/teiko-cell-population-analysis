@@ -3,6 +3,7 @@ __pycache__/
 *.pyc
 .DS_Store
 .ipynb_checkpoints/
+.pytest_cache/
 
 # internal planning/progress notes, not part of the submission
 TASK.md

@@ -5,3 +5,4 @@ matplotlib==3.11.1
 seaborn==0.13.2
 plotly==7.0.0
 streamlit==1.62.0
+pytest==9.1.1
