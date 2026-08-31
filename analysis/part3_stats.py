@@ -74,11 +74,20 @@ def compare_populations(df: pd.DataFrame) -> pd.DataFrame:
         )
         t_stat, t_p = stats.ttest_ind(responders, non_responders, equal_var=False)
 
+        # Rank-biserial correlation: effect size for Mann-Whitney U.
+        # r = 2U/(n1*n2) - 1, where U is the statistic for the responders
+        # group (first argument above). Ranges -1 to 1; positive means
+        # responders skew higher than non-responders, negative means lower.
+        # This is what tells us whether a "significant" result is actually
+        # a *large* difference or just a small one detectable at n~1000.
+        n1, n2 = len(responders), len(non_responders)
+        rank_biserial_r = (2 * u_stat / (n1 * n2)) - 1
+
         rows.append(
             {
                 "population": population,
-                "n_responders": len(responders),
-                "n_non_responders": len(non_responders),
+                "n_responders": n1,
+                "n_non_responders": n2,
                 "median_responder_pct": round(responders.median(), 3),
                 "median_non_responder_pct": round(non_responders.median(), 3),
                 "mean_responder_pct": round(responders.mean(), 3),
@@ -86,6 +95,7 @@ def compare_populations(df: pd.DataFrame) -> pd.DataFrame:
                 "mannwhitney_u": u_stat,
                 "mannwhitney_p": mw_p,
                 "welch_ttest_p": t_p,
+                "rank_biserial_r": round(rank_biserial_r, 4),
             }
         )
         p_values.append(mw_p)

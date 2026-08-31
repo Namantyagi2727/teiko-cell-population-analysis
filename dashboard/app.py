@@ -151,6 +151,10 @@ with tab3:
             cohort.rename(columns={"sample": "sample_id"})[["population", "response", "percentage"]]
         )
         st.markdown("**Statistical comparison** (Mann-Whitney U, Benjamini-Hochberg FDR-adjusted)")
+        st.caption(
+            "`rank_biserial_r` is the effect size (-1 to 1); check this alongside "
+            "the p-value since large n can make tiny differences \"significant\"."
+        )
         st.dataframe(stats_df, width="stretch")
 
 # ---------------------------------------------------------------- Part 4 ---

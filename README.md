@@ -143,6 +143,17 @@ p-values are adjusted with **Benjamini-Hochberg FDR correction**; see
 In this dataset, no population's difference survives FDR correction at 0.05
 (`cd4_t_cell` is the closest, raw p = 0.013, FDR-adjusted p = 0.067).
 
+Because each group has ~1000 samples, a test can reach statistical
+significance on a difference too small to matter practically. To guard
+against over-reading a low p-value, the table also reports the
+**rank-biserial correlation** (`rank_biserial_r`) as an effect size — it
+ranges from -1 to 1, where 0 means no tendency for either group to skew
+higher and ±1 means complete separation. Every population here has
+`|r| < 0.07`, i.e. even `cd4_t_cell`'s nominally low p-value corresponds to
+a negligible effect size. This is the strongest evidence to bring to Yah:
+not just "nothing survives correction," but "even the raw, uncorrected
+signal is too small to be a usable predictor of response."
+
 ### Part 4 answer
 
 Average B cell count for melanoma male responders at time = 0, across all
