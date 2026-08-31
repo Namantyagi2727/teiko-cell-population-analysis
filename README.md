@@ -7,7 +7,10 @@ trial data, built on the cell population counts in `cell-count.csv`.
 
 ## Running it
 
-Everything below works unmodified in a fresh GitHub Codespace.
+Everything below works unmodified in a fresh GitHub Codespace. A
+`.devcontainer/devcontainer.json` pins the environment to Python 3.12 and
+forwards port 8501, so opening this repo in Codespaces (or VS Code Dev
+Containers) reproduces exactly what was tested here — no extra setup.
 
 ```bash
 make setup      # installs dependencies from requirements.txt
