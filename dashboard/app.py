@@ -1,9 +1,10 @@
 """
 Interactive dashboard for Bob Loblaw's immune cell population analysis.
 
-Run with `streamlit run dashboard/app.py` (or `make dashboard`).
-Reads directly from cell_counts.db, which must already exist -- run
-`python load_data.py` first (or `make pipeline`).
+Run with `streamlit run dashboard/app.py` (or `make dashboard`). If
+cell_counts.db doesn't exist yet (e.g. a fresh deploy where the pipeline
+hasn't been run), it's built automatically from cell-count.csv on first
+load rather than failing.
 """
 
 import sqlite3
@@ -18,6 +19,7 @@ ROOT = Path(__file__).resolve().parent.parent
 DB_PATH = ROOT / "cell_counts.db"
 sys.path.insert(0, str(ROOT))
 
+import load_data  # noqa: E402
 from analysis.part3_stats import POPULATIONS, compare_populations  # noqa: E402
 
 st.set_page_config(page_title="Loblaw Bio - Immune Cell Analysis", layout="wide")
@@ -49,10 +51,8 @@ def distinct_values(df: pd.DataFrame, col: str) -> list:
 
 
 if not DB_PATH.exists():
-    st.error(
-        "cell_counts.db not found. Run `python load_data.py` (or `make pipeline`) first."
-    )
-    st.stop()
+    with st.spinner("First run: building cell_counts.db from cell-count.csv..."):
+        load_data.main()
 
 data = load_frequencies()
 
@@ -81,7 +81,14 @@ with tab2:
     if selected_sample != "All samples":
         freq_df = freq_df[freq_df["sample"] == selected_sample]
 
-    st.dataframe(freq_df.sort_values(["sample", "population"]), width="stretch", height=400)
+    freq_df = freq_df.sort_values(["sample", "population"])
+    st.dataframe(freq_df, width="stretch", height=400)
+    st.download_button(
+        "Download this table (CSV)",
+        data=freq_df.to_csv(index=False),
+        file_name="part2_frequencies.csv",
+        mime="text/csv",
+    )
 
     avg_composition = (
         data.groupby("population")["percentage"].mean().reindex(POPULATIONS).reset_index()
@@ -156,6 +163,16 @@ with tab3:
             "the p-value since large n can make tiny differences \"significant\"."
         )
         st.dataframe(stats_df, width="stretch")
+        st.download_button(
+            "Download this comparison (CSV)",
+            data=stats_df.to_csv(index=False),
+            file_name="part3_responder_comparison.csv",
+            mime="text/csv",
+        )
+        st.caption(
+            "To save a chart image, use the camera icon in the plot's own toolbar "
+            "(top-right, on hover)."
+        )
 
 # ---------------------------------------------------------------- Part 4 ---
 with tab4:
@@ -200,3 +217,12 @@ with tab4:
     ]
     avg_b_cell = b_cell_subset["count"].mean()
     st.metric("Average B cell count", f"{avg_b_cell:.2f}", help=f"n = {len(b_cell_subset)} samples")
+
+    st.divider()
+    baseline_export = baseline[["sample", "subject_id", "project", "response", "sex"]]
+    st.download_button(
+        "Download baseline sample list (CSV)",
+        data=baseline_export.to_csv(index=False),
+        file_name="part4_baseline_samples.csv",
+        mime="text/csv",
+    )
